@@ -1,7 +1,9 @@
 # curio-firmware
 
+🚧 Work in progress 🚧
+
 Firmware for [Curio](https://github.com/dotcypress/curio)
-🚧 Work in progress
+
 
 ## Build instructions
 
