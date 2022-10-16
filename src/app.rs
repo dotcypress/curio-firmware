@@ -1,4 +1,5 @@
-use crate::{assets::AppIcon, ui::*};
+use crate::assets::MenuItem;
+use crate::ui::*;
 use curio_bsp::protocol::nec::NecCommand;
 use klaptik::*;
 
@@ -22,19 +23,25 @@ pub struct App {
     pub active_widget: ViewportNode,
     pub ir_cmd: NecCommand,
     pub last_ir_cmd: NecCommand,
-    pub main_menu: Menu<AppIcon>,
-    pub config_menu: Menu<AppIcon>,
+    pub main_menu: Menu,
+    pub config_menu: Menu,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl App {
     pub fn new() -> Self {
         let main_menu = Menu::new(&[
-            AppIcon::Config,
-            AppIcon::Scan,
-            AppIcon::Send,
-            AppIcon::Replay,
+            MenuItem::Config,
+            MenuItem::Scan,
+            MenuItem::Send,
+            MenuItem::Replay,
         ]);
-        let config_menu = Menu::new(&[AppIcon::About, AppIcon::Sleep, AppIcon::Backlight]);
+        let config_menu = Menu::new(&[MenuItem::About, MenuItem::Sleep, MenuItem::Backlight]);
         let ir_cmd = NecCommand {
             addr: 0,
             cmd: 3,
@@ -65,9 +72,9 @@ impl App {
         match self.active_widget {
             ViewportNode::MainMenu => match ev {
                 AppEvent::ButtonA => match self.main_menu.selected() {
-                    AppIcon::Config => self.switch_to(ViewportNode::ConfigMenu),
-                    AppIcon::Scan => self.switch_to(ViewportNode::Scan),
-                    AppIcon::Send => self.switch_to(ViewportNode::Send),
+                    MenuItem::Config => self.switch_to(ViewportNode::ConfigMenu),
+                    MenuItem::Scan => self.switch_to(ViewportNode::Scan),
+                    MenuItem::Send => self.switch_to(ViewportNode::Send),
                     _ => {}
                 },
                 AppEvent::ThumbMove(p) => {
@@ -98,8 +105,8 @@ impl App {
             },
             ViewportNode::ConfigMenu => match ev {
                 AppEvent::ButtonA => match self.config_menu.selected() {
-                    AppIcon::Backlight => self.switch_to(ViewportNode::Backlight),
-                    AppIcon::Sleep => self.switch_to(ViewportNode::SleepTimeout),
+                    MenuItem::Backlight => self.switch_to(ViewportNode::Backlight),
+                    MenuItem::Sleep => self.switch_to(ViewportNode::SleepTimeout),
                     _ => {}
                 },
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),

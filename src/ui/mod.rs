@@ -23,8 +23,8 @@ widget_mux! {
       widget.config_menu.update(&state.config_menu);
       widget.backlight.update(state.backlight);
       widget.sleep_timeout.update(state.sleep_timeout);
-      widget.scan.update(&state);
-      widget.send.update(&state);
+      widget.scan.update(state);
+      widget.send.update(state);
       widget.set_active(state.active_widget);
   }
 }

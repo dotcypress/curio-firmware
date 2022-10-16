@@ -3,17 +3,17 @@ use curio_bsp::Display;
 use klaptik::*;
 
 widget_group! {
-    MenuWidget<&Menu<AppIcon>>,
+    MenuWidget<&Menu>,
     {
         bg: Background, Point::zero(), Display::SIZE;
-        icon1: RomIcon<AppIcon>, Icon16, AppIcon::About, Point::new(0, 0);
-        line1: RomIcon<AppIcon>, MenuMedium, AppIcon::About, Point::new(24, 0);
-        icon2: RomIcon<AppIcon>, Icon16, AppIcon::About, Point::new(2, 24);
-        line2: RomIcon<AppIcon>, MenuLarge, AppIcon::About, Point::new(24, 16);
-        icon3: RomIcon<AppIcon>, Icon16, AppIcon::About, Point::new(0, 48);
-        line3: RomIcon<AppIcon>, MenuMedium, AppIcon::About, Point::new(24, 48);
+        icon1: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(0, 0);
+        icon2: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(2, 24);
+        icon3: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(0, 48);
+        line1: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 0);
+        line2: MenuIcon, MenuLargeSprite, MenuItem::About, Point::new(24, 16);
+        line3: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 48);
     },
-    |widget: &mut MenuWidget, state: &Menu<AppIcon>| {
+    |widget: &mut MenuWidget, state: &Menu| {
         let mut lines = state.lines.iter().cycle().skip(state.cursor);
         let line = lines.next().unwrap();
         widget.icon1.update(*line);
@@ -29,13 +29,13 @@ widget_group! {
     }
 }
 
-pub struct Menu<G: Into<Glyph> + 'static> {
-    lines: &'static [G],
+pub struct Menu {
+    lines: &'static [MenuItem],
     cursor: usize,
 }
 
-impl<G: Into<Glyph> + Copy> Menu<G> {
-    pub fn new(lines: &'static [G]) -> Self {
+impl Menu {
+    pub fn new(lines: &'static [MenuItem]) -> Self {
         Self { lines, cursor: 0 }
     }
 
@@ -51,7 +51,7 @@ impl<G: Into<Glyph> + Copy> Menu<G> {
         self.cursor = (self.cursor + 1) % self.lines.len();
     }
 
-    pub fn selected(&self) -> G {
+    pub fn selected(&self) -> MenuItem {
         self.lines[(self.cursor + 1) % self.lines.len()]
     }
 }
