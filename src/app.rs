@@ -43,7 +43,7 @@ impl App {
             frame: 0,
             backlight: 8,
             sleep_timeout: 15,
-            active: UiNode::Scan,
+            active: UiNode::MainMenu,
             main_menu,
             cfg_menu,
             last_cmd: cmd,
