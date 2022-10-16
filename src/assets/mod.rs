@@ -29,7 +29,7 @@ pub const Icon16: RomSprite = RomSprite::new(
 #[allow(dead_code)]
 pub const Font24: RomSprite = RomSprite::new(
     Glyphs::Alphabet(b"0123456789ABCDEFsx?%. "),
-    Size::new(22, 24),
+    Size::new(16, 24),
     include_bytes!("font_24.bin"),
 );
 
