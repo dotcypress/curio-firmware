@@ -4,7 +4,6 @@
 
 Firmware for [Curio](https://github.com/dotcypress/curio)
 
-
 ## Build instructions
 
 1. Install rustup by following the instructions at https://rustup.rs
@@ -14,13 +13,6 @@ Firmware for [Curio](https://github.com/dotcypress/curio)
 5. Clone this repo: `git clone git@github.com:dotcypress/curio-firmware.git`
 6. Build firmware: `cargo build --release`
 7. Flash microcontroller: `cargo run --release`
-
-## Credits
-
-* [`1-Bit Icons`](https://vectorpixelstar.itch.io) by VectorPixelStar
-* [`Edition 12`](https://www.dafont.com/edition-12.font) font by Designer's High
-* [`BM Army`](https://www.dafont.com/bm-army.font) font by BitmapMania
-* [`Nokia Cellphone FC`](https://www.dafont.com/nokia-cellphone.font) font by Zeh Fernando
 
 ## License
 
