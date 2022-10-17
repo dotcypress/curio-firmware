@@ -2,6 +2,7 @@
 
 use klaptik::*;
 
+pub type GlyphIcon = RomIcon<Glyph>;
 pub type MenuIcon = RomIcon<MenuItem>;
 pub type SubMenuIcon = RomIcon<SubMenuItem>;
 pub type SpriteLabel<const LEN: usize> = Label<RomSprite, LEN>;
@@ -36,10 +37,10 @@ impl From<SubMenuItem> for Glyph {
     }
 }
 
-pub const Icon16Sprite: RomSprite = RomSprite::new(
+pub const IconSprite: RomSprite = RomSprite::new(
     Glyphs::Sequential(8),
     Size::new(16, 16),
-    include_bytes!("icons_16.bin"),
+    include_bytes!("icons.bin"),
 );
 
 pub const MenuMediumSprite: RomSprite = RomSprite::new(
@@ -57,10 +58,22 @@ pub const MenuLargeSprite: RomSprite = RomSprite::new(
 pub const SubMenuSprite: RomSprite = RomSprite::new(
     Glyphs::Sequential(5),
     Size::new(56, 8),
-    include_bytes!("menu_small.bin"),
+    include_bytes!("submenu.bin"),
 );
 
-pub const Font24Sprite: RomSprite = RomSprite::new(
+pub const AboutSprite: RomSprite = RomSprite::new(
+    Glyphs::Sequential(1),
+    Size::new(88, 32),
+    include_bytes!("about.bin"),
+);
+
+pub const WebsiteSprite: RomSprite = RomSprite::new(
+    Glyphs::Sequential(1),
+    Size::new(104, 8),
+    include_bytes!("website.bin"),
+);
+
+pub const FontSprite: RomSprite = RomSprite::new(
     Glyphs::Alphabet(b"0123456789ABCDEFsx?%. "),
     Size::new(16, 24),
     include_bytes!("font_24.bin"),

@@ -21,8 +21,8 @@ pub struct App {
     pub backlight: u8,
     pub sleep_timeout: u8,
     pub active_widget: ViewportNode,
-    pub ir_cmd: NecCommand,
-    pub last_ir_cmd: NecCommand,
+    pub tx_cmd: NecCommand,
+    pub rx_cmd: NecCommand,
     pub main_menu: Menu,
     pub config_menu: Menu,
 }
@@ -35,26 +35,21 @@ impl Default for App {
 
 impl App {
     pub fn new() -> Self {
-        let main_menu = Menu::new(&[
-            MenuItem::Config,
-            MenuItem::Scan,
-            MenuItem::Send,
-            MenuItem::Replay,
-        ]);
+        let main_menu = Menu::new(&[MenuItem::Config, MenuItem::Scan, MenuItem::Send]);
         let config_menu = Menu::new(&[MenuItem::About, MenuItem::Sleep, MenuItem::Backlight]);
-        let ir_cmd = NecCommand {
+        let cmd = NecCommand {
             addr: 0,
-            cmd: 3,
+            cmd: 0,
             repeat: false,
         };
         Self {
-            ir_cmd,
             main_menu,
             config_menu,
             backlight: 8,
             frame: 0,
             sleep_timeout: 15,
-            last_ir_cmd: ir_cmd,
+            tx_cmd: cmd,
+            rx_cmd: cmd,
             active_widget: ViewportNode::MainMenu,
         }
     }
@@ -77,29 +72,23 @@ impl App {
                     MenuItem::Send => self.switch_to(ViewportNode::Send),
                     _ => {}
                 },
-                AppEvent::ThumbMove(p) => {
-                    if p.y > 32 {
-                        self.main_menu.move_up();
-                    } else if p.y < -32 {
-                        self.main_menu.move_down();
-                    }
-                }
+                AppEvent::ThumbMove(p) if p.y > 32 => self.main_menu.move_up(),
+                AppEvent::ThumbMove(p) if p.y < -32 => self.main_menu.move_down(),
                 _ => {}
             },
             ViewportNode::Scan => match ev {
-                AppEvent::IrCommand(cmd) => self.last_ir_cmd = cmd,
+                AppEvent::IrCommand(cmd) => self.rx_cmd = cmd,
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
                 _ => {}
             },
             ViewportNode::Send => match ev {
-                AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.ir_cmd)),
+                AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                AppEvent::ThumbMove(p) => {
-                    if p.y > 32 {
-                        self.ir_cmd.cmd = self.ir_cmd.cmd.saturating_add(1);
-                    } else if p.y < -32 {
-                        self.ir_cmd.cmd = self.ir_cmd.cmd.saturating_sub(1);
-                    }
+                AppEvent::ThumbMove(p) if p.y > 32 => {
+                    self.tx_cmd.cmd = self.tx_cmd.cmd.saturating_add(1)
+                }
+                AppEvent::ThumbMove(p) if p.y < -32 => {
+                    self.tx_cmd.cmd = self.tx_cmd.cmd.saturating_sub(1)
                 }
                 _ => {}
             },
@@ -107,40 +96,39 @@ impl App {
                 AppEvent::ButtonA => match self.config_menu.selected() {
                     MenuItem::Backlight => self.switch_to(ViewportNode::Backlight),
                     MenuItem::Sleep => self.switch_to(ViewportNode::SleepTimeout),
+                    MenuItem::About => self.switch_to(ViewportNode::About),
                     _ => {}
                 },
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                AppEvent::ThumbMove(p) => {
-                    if p.y > 32 {
-                        self.config_menu.move_up();
-                    } else if p.y < -32 {
-                        self.config_menu.move_down();
-                    }
-                }
+                AppEvent::ThumbMove(p) if p.y > 32 => self.config_menu.move_up(),
+                AppEvent::ThumbMove(p) if p.y < -32 => self.config_menu.move_down(),
+
                 _ => {}
             },
             ViewportNode::Backlight => match ev {
                 AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
-                AppEvent::ThumbMove(p) => {
-                    if p.y > 32 {
-                        self.backlight = self.backlight.saturating_add(1).clamp(0, 10);
-                        return Some(AppRequest::SetBrightness(self.backlight));
-                    } else if p.y < -32 {
-                        self.backlight = self.backlight.saturating_sub(1);
-                        return Some(AppRequest::SetBrightness(self.backlight));
-                    }
+                AppEvent::ThumbMove(p) if p.y > 32 => {
+                    self.backlight = self.backlight.saturating_add(1).clamp(0, 10);
+                    return Some(AppRequest::SetBrightness(self.backlight));
+                }
+                AppEvent::ThumbMove(p) if p.y < -32 => {
+                    self.backlight = self.backlight.saturating_sub(1);
+                    return Some(AppRequest::SetBrightness(self.backlight));
                 }
                 _ => {}
             },
             ViewportNode::SleepTimeout => match ev {
                 AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
-                AppEvent::ThumbMove(p) => {
-                    if p.y > 32 {
-                        self.sleep_timeout = self.sleep_timeout.saturating_add(1).clamp(10, 60);
-                    } else if p.y < -32 {
-                        self.sleep_timeout = self.sleep_timeout.saturating_sub(1).clamp(10, 60);
-                    }
+                AppEvent::ThumbMove(p) if p.y > 32 => {
+                    self.sleep_timeout = self.sleep_timeout.saturating_add(5).clamp(10, 60)
                 }
+                AppEvent::ThumbMove(p) if p.y < -32 => {
+                    self.sleep_timeout = self.sleep_timeout.saturating_sub(5).clamp(10, 60)
+                }
+                _ => {}
+            },
+            ViewportNode::About => match ev {
+                AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
                 _ => {}
             },
         }

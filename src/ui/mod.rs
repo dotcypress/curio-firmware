@@ -17,6 +17,7 @@ widget_mux! {
       send: SendWidget;
       backlight: BacklightWidget;
       sleep_timeout: SleepTimeoutWidget;
+      about: AboutWidget;
   },
   |widget: &mut Viewport, state: &App| {
       widget.main_menu.update(&state.main_menu);

@@ -6,9 +6,9 @@ widget_group! {
     MenuWidget<&Menu>,
     {
         bg: Background, Point::zero(), Display::SIZE;
-        icon1: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(0, 0);
-        icon2: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(2, 24);
-        icon3: MenuIcon, Icon16Sprite, MenuItem::About, Point::new(0, 48);
+        icon1: MenuIcon, IconSprite, MenuItem::About, Point::new(0, 0);
+        icon2: MenuIcon, IconSprite, MenuItem::About, Point::new(2, 24);
+        icon3: MenuIcon, IconSprite, MenuItem::About, Point::new(0, 48);
         line1: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 0);
         line2: MenuIcon, MenuLargeSprite, MenuItem::About, Point::new(24, 16);
         line3: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 48);

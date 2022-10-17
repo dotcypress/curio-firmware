@@ -129,7 +129,7 @@ mod curio {
         ctx.local.ui_timer.clear_irq();
     }
 
-    #[task(binds = TIM16, priority = 2, shared = [app, ir])]
+    #[task(binds = TIM16, shared = [app, ir])]
     fn ir_timer_tick(ctx: ir_timer_tick::Context) {
         let mut app = ctx.shared.app;
         let mut ir = ctx.shared.ir;
@@ -164,7 +164,6 @@ mod curio {
             AppRequest::TransmitIRCommand(cmd) => {
                 let mut ir = ctx.shared.ir;
                 ir.lock(|ir| ir.send(&cmd));
-                defmt::info!("send {} {}", cmd.addr, cmd.cmd);
             }
             AppRequest::SwitchOff => {
                 let pwr = ctx.local.pwr;
