@@ -13,13 +13,13 @@ widget_group! {
         battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
-        addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
-        cmd: SpriteLabel<2>, FontSprite, "00", Point::new(80, 40);
+        addr: SpriteLabel<3>, FontSprite, "000", Point::new(8, 40);
+        cmd: SpriteLabel<3>, FontSprite, "000", Point::new(72, 40);
     },
     |widget: &mut ScanWidget, state: &App| {
         widget.battery.update(state.battery_voltage);
-        write!(widget.addr, "{:0>2}", state.rx_cmd.addr).ok();
-        write!(widget.cmd, "{:0>2}", state.rx_cmd.cmd).ok();
+        write!(widget.addr, "{:0>3}", state.rx_cmd.addr).ok();
+        write!(widget.cmd, "{:0>3}", state.rx_cmd.cmd).ok();
     }
 }
 
@@ -32,13 +32,13 @@ widget_group! {
         battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
-        addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
-        cmd: SpriteLabel<2>, FontSprite, "00", Point::new(80, 40);
+        addr: SpriteLabel<3>, FontSprite, "000", Point::new(8, 40);
+        cmd: SpriteLabel<3>, FontSprite, "000", Point::new(72, 40);
     },
     |widget: &mut SendWidget, state: &App| {
         widget.battery.update(state.battery_voltage);
-        write!(widget.addr, "{:0>2}", state.tx_cmd.addr).ok();
-        write!(widget.cmd, "{:0>2}", state.tx_cmd.cmd).ok();
+        write!(widget.addr, "{:0>3}", state.tx_cmd.addr).ok();
+        write!(widget.cmd, "{:0>3}", state.tx_cmd.cmd).ok();
     }
 }
 

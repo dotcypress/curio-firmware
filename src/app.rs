@@ -26,19 +26,20 @@ pub enum AppRequest {
 
 pub struct App {
     pub frame: u8,
-    pub options: Options,
     pub sleep_timeout: u32,
     pub battery_voltage: Glyph,
+    pub options: Options,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
     pub rx_cmd: NecCommand,
+    pub address_edit: bool,
     pub main_menu: Menu,
     pub config_menu: Menu,
 }
 
 impl App {
     pub fn new(options: Options, battery_voltage: u16) -> Self {
-        let main_menu = Menu::new(&[MenuItem::Config, MenuItem::Scan, MenuItem::Send]);
+        let main_menu = Menu::new(&[MenuItem::Scan, MenuItem::Send, MenuItem::Config]);
         let config_menu = Menu::new(&[MenuItem::About, MenuItem::Sleep, MenuItem::Backlight]);
         let cmd = NecCommand {
             addr: 0,
@@ -58,6 +59,7 @@ impl App {
             tx_cmd: cmd,
             rx_cmd: cmd,
             sleep_timeout: 0,
+            address_edit: false,
             active_widget: ViewportNode::MainMenu,
         }
     }
@@ -102,11 +104,21 @@ impl App {
             ViewportNode::Send => match ev {
                 AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
+                AppEvent::ThumbMove(p) if p.x > 32 => self.address_edit = false,
+                AppEvent::ThumbMove(p) if p.x < -32 => self.address_edit = true,
                 AppEvent::ThumbMove(p) if p.y > 32 => {
-                    self.tx_cmd.cmd = self.tx_cmd.cmd.saturating_add(1)
+                    if self.address_edit {
+                        self.tx_cmd.addr = self.tx_cmd.addr.wrapping_add(1)
+                    } else {
+                        self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_add(1)
+                    }
                 }
                 AppEvent::ThumbMove(p) if p.y < -32 => {
-                    self.tx_cmd.cmd = self.tx_cmd.cmd.saturating_sub(1)
+                    if self.address_edit {
+                        self.tx_cmd.addr = self.tx_cmd.addr.wrapping_sub(1)
+                    } else {
+                        self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_sub(1)
+                    }
                 }
                 _ => {}
             },
@@ -175,18 +187,14 @@ impl Options {
 
     pub fn load() -> Self {
         let opts = unsafe { core::ptr::read(Self::PAGE.to_address() as *const u32) };
-        let [_, _, mut backlight, mut sleep_timeout] = opts.to_le_bytes();
-        if !(10..=90).contains(&sleep_timeout) {
-            sleep_timeout = 90;
-            backlight = 8;
-        }
+        let [_, _, backlight, sleep_timeout] = opts.to_le_bytes();
         Self {
-            backlight,
-            sleep_timeout,
+            backlight: backlight.clamp(0, 10),
+            sleep_timeout: sleep_timeout.clamp(10, 60),
         }
     }
 
-    pub fn to_bytes(self) -> [u8; 4] {
+    pub fn into_bytes(self) -> [u8; 4] {
         [0, 0, self.backlight, self.sleep_timeout]
     }
 }

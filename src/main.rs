@@ -17,13 +17,13 @@ use curio_bsp::hal::gpio::SignalEdge;
 use curio_bsp::hal::power::*;
 use curio_bsp::hal::rcc::*;
 use curio_bsp::hal::timer::Timer;
+use curio_bsp::stm32::FLASH;
 use curio_bsp::*;
 use klaptik::Widget;
 use ui::*;
 
 #[rtic::app(device = stm32, peripherals = true, dispatchers = [CEC])]
 mod curio {
-    use curio_bsp::stm32::FLASH;
 
     use super::*;
 
@@ -38,10 +38,10 @@ mod curio {
 
     #[local]
     struct Local {
-        ui: Viewport,
-        scb: stm32::SCB,
         pwr: Power,
+        scb: stm32::SCB,
         flash: Option<FLASH>,
+        ui: Viewport,
         ui_timer: Timer<stm32::TIM14>,
         render_timer: Timer<stm32::TIM17>,
     }
@@ -91,7 +91,6 @@ mod curio {
         let ui = Viewport::new();
 
         defmt::info!("init done");
-
         (
             Shared {
                 app,
@@ -179,9 +178,9 @@ mod curio {
                 if let Some(flash) = ctx.local.flash.take() {
                     hal::cortex_m::interrupt::free(|_| {
                         if let Ok(mut unlocked) = flash.unlock() {
-                            unlocked.erase_page(Options::PAGE).unwrap();
+                            unlocked.erase_page(Options::PAGE).ok();
                             let addr = Options::PAGE.to_address();
-                            unlocked.write(addr, &options.to_bytes()).unwrap();
+                            unlocked.write(addr, &options.into_bytes()).ok();
                             *ctx.local.flash = Some(unlocked.lock());
                         }
                     });
@@ -189,8 +188,8 @@ mod curio {
             }
             AppRequest::SwitchOff => {
                 let pwr = ctx.local.pwr;
-                pwr.set_mode(PowerMode::LowPower(LowPowerMode::Shutdown));
                 pwr.clear_wakeup_flag(WakeUp::Line4);
+                pwr.set_mode(PowerMode::LowPower(LowPowerMode::Shutdown));
                 ctx.local.scb.set_sleepdeep();
             }
         }
