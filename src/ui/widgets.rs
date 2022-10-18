@@ -10,7 +10,7 @@ widget_group! {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Scan, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Scan, Point::new(24, 0);
-        battery: GlyphIcon, BatterySprite, 0, Point::new(104, 0);
+        battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
         addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
@@ -29,7 +29,7 @@ widget_group! {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Send, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Send, Point::new(24, 0);
-        battery: GlyphIcon, BatterySprite, 0, Point::new(104, 0);
+        battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
         addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
