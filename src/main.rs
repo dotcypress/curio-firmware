@@ -116,12 +116,10 @@ mod curio {
         let mut app = ctx.shared.app;
         let mut control = ctx.shared.control;
 
-        match control.lock(|ctrl| ctrl.buttons()) {
-            (true, false) => app.lock(|app| app.handle_event(AppEvent::ButtonA)),
-            (false, true) => app.lock(|app| app.handle_event(AppEvent::ButtonB)),
-            _ => None,
+        if let Some(btn) = control.lock(|ctrl| ctrl.read_buttons()) {
+            app.lock(|app| app.handle_button(btn))
+                .map(app_request::spawn);
         }
-        .map(app_request::spawn);
     }
 
     #[task(binds = TIM14, local = [ui_timer], shared = [app, control])]
@@ -129,9 +127,10 @@ mod curio {
         let mut app = ctx.shared.app;
         let mut control = ctx.shared.control;
 
-        let thumb = control.lock(|ctrl| ctrl.thumb());
-        app.lock(|app| app.handle_event(AppEvent::ThumbMove(thumb)))
-            .map(app_request::spawn);
+        if let Some(btn) = control.lock(|ctrl| ctrl.read_dpad()) {
+            app.lock(|app| app.handle_button(btn))
+                .map(app_request::spawn);
+        }
 
         ctx.local.ui_timer.clear_irq();
     }
@@ -155,7 +154,8 @@ mod curio {
         let mut display = ctx.shared.display;
 
         app.lock(|app| {
-            app.tick().map(app_request::spawn);
+            app.handle_event(AppEvent::ClockTick)
+                .map(app_request::spawn);
             ui.update(app);
         });
         display.lock(|display| ui.render(display));
@@ -174,6 +174,12 @@ mod curio {
                 let mut ir = ctx.shared.ir;
                 ir.lock(|ir| ir.send(&cmd));
             }
+            AppRequest::SwitchOff => {
+                let pwr = ctx.local.pwr;
+                pwr.clear_wakeup_flag(WakeUp::Line4);
+                pwr.set_mode(PowerMode::LowPower(LowPowerMode::Shutdown));
+                ctx.local.scb.set_sleepdeep();
+            }
             AppRequest::StoreOptions(options) => {
                 if let Some(flash) = ctx.local.flash.take() {
                     hal::cortex_m::interrupt::free(|_| {
@@ -185,12 +191,6 @@ mod curio {
                         }
                     });
                 }
-            }
-            AppRequest::SwitchOff => {
-                let pwr = ctx.local.pwr;
-                pwr.clear_wakeup_flag(WakeUp::Line4);
-                pwr.set_mode(PowerMode::LowPower(LowPowerMode::Shutdown));
-                ctx.local.scb.set_sleepdeep();
             }
         }
     }

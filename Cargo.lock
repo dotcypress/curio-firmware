@@ -152,7 +152,7 @@ dependencies = [
 [[package]]
 name = "curio-bsp"
 version = "0.0.1"
-source = "git+https://github.com/dotcypress/curio#41e1ed45c19656ac1dbe9c3a8515bfbd68348de0"
+source = "git+https://github.com/dotcypress/curio#8c8d57d43504af2836871a5296ba53b03e77f37f"
 dependencies = [
  "infrared",
  "klaptik",

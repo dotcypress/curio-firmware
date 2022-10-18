@@ -2,19 +2,12 @@ use crate::assets::MenuItem;
 use crate::ui::*;
 use curio_bsp::hal::flash::FlashPage;
 use curio_bsp::protocol::nec::NecCommand;
+use curio_bsp::Button;
 use klaptik::*;
 
 pub enum AppEvent {
-    ButtonA,
-    ButtonB,
-    ThumbMove(Point),
+    ClockTick,
     IrCommand(NecCommand),
-}
-
-impl AppEvent {
-    pub fn is_user_event(&self) -> bool {
-        matches!(self, AppEvent::ButtonA | AppEvent::ButtonB)
-    }
 }
 
 pub enum AppRequest {
@@ -68,111 +61,115 @@ impl App {
         self.active_widget = widget;
     }
 
-    pub fn tick(&mut self) -> Option<AppRequest> {
-        self.frame = self.frame.wrapping_add(1);
-        self.sleep_timeout = self.sleep_timeout.wrapping_add(1);
-        if self.sleep_timeout / 10 > self.options.sleep_timeout as _ {
-            return Some(AppRequest::SwitchOff);
-        }
-        None
-    }
+    pub fn handle_button(&mut self, btn: Button) -> Option<AppRequest> {
+        self.sleep_timeout = 0;
 
-    pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
-        if ev.is_user_event() {
-            self.sleep_timeout = 0;
-        }
         match self.active_widget {
-            ViewportNode::MainMenu => match ev {
-                AppEvent::ButtonB => return Some(AppRequest::SwitchOff),
-                AppEvent::ButtonA => match self.main_menu.selected() {
+            ViewportNode::MainMenu => match btn {
+                Button::A => match self.main_menu.selected() {
                     MenuItem::Config => self.switch_to(ViewportNode::ConfigMenu),
                     MenuItem::Scan => self.switch_to(ViewportNode::Scan),
                     MenuItem::Send => self.switch_to(ViewportNode::Send),
                     _ => {}
                 },
-                AppEvent::ThumbMove(p) if p.y > 32 => self.main_menu.move_up(),
-                AppEvent::ThumbMove(p) if p.y < -32 => self.main_menu.move_down(),
+                Button::B => return Some(AppRequest::SwitchOff),
+                Button::Up => self.main_menu.move_up(),
+                Button::Down => self.main_menu.move_down(),
                 _ => {}
             },
-            ViewportNode::Scan => match ev {
-                AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                AppEvent::IrCommand(cmd) => {
-                    self.rx_cmd = cmd;
+            ViewportNode::Scan => match btn {
+                Button::A => return Some(AppRequest::TransmitIRCommand(self.rx_cmd)),
+                Button::B => self.switch_to(ViewportNode::MainMenu),
+                _ => {}
+            },
+            ViewportNode::Send => match btn {
+                Button::A => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
+                Button::B => self.switch_to(ViewportNode::MainMenu),
+                Button::Right => self.address_edit = false,
+                Button::Left => self.address_edit = true,
+                Button::Up if self.address_edit => {
+                    self.tx_cmd.addr = self.tx_cmd.addr.wrapping_add(1)
+                }
+                Button::Up if !self.address_edit => {
+                    self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_add(1)
+                }
+                Button::Down if self.address_edit => {
+                    self.tx_cmd.addr = self.tx_cmd.addr.wrapping_sub(1);
+                }
+                Button::Down if !self.address_edit => {
+                    self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_sub(1);
                 }
                 _ => {}
             },
-            ViewportNode::Send => match ev {
-                AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
-                AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                AppEvent::ThumbMove(p) if p.x > 32 => self.address_edit = false,
-                AppEvent::ThumbMove(p) if p.x < -32 => self.address_edit = true,
-                AppEvent::ThumbMove(p) if p.y > 32 => {
-                    if self.address_edit {
-                        self.tx_cmd.addr = self.tx_cmd.addr.wrapping_add(1)
-                    } else {
-                        self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_add(1)
-                    }
-                }
-                AppEvent::ThumbMove(p) if p.y < -32 => {
-                    if self.address_edit {
-                        self.tx_cmd.addr = self.tx_cmd.addr.wrapping_sub(1)
-                    } else {
-                        self.tx_cmd.cmd = self.tx_cmd.cmd.wrapping_sub(1)
-                    }
-                }
-                _ => {}
-            },
-            ViewportNode::ConfigMenu => match ev {
-                AppEvent::ButtonA => match self.config_menu.selected() {
+            ViewportNode::ConfigMenu => match btn {
+                Button::A => match self.config_menu.selected() {
                     MenuItem::Backlight => self.switch_to(ViewportNode::Backlight),
                     MenuItem::Sleep => self.switch_to(ViewportNode::SleepTimeout),
                     MenuItem::About => self.switch_to(ViewportNode::About),
                     _ => {}
                 },
-                AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                AppEvent::ThumbMove(p) if p.y > 32 => self.config_menu.move_up(),
-                AppEvent::ThumbMove(p) if p.y < -32 => self.config_menu.move_down(),
+                Button::B => self.switch_to(ViewportNode::MainMenu),
+                Button::Up => self.config_menu.move_up(),
+                Button::Down => self.config_menu.move_down(),
 
                 _ => {}
             },
-            ViewportNode::Backlight => match ev {
-                AppEvent::ButtonA => {
+            ViewportNode::Backlight => match btn {
+                Button::A => {
                     self.switch_to(ViewportNode::ConfigMenu);
                     return Some(AppRequest::StoreOptions(self.options));
                 }
-                AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
-                AppEvent::ThumbMove(p) if p.y > 32 => {
+                Button::B => self.switch_to(ViewportNode::ConfigMenu),
+                Button::Up => {
                     self.options.backlight = self.options.backlight.saturating_add(1).clamp(0, 10);
                     return Some(AppRequest::SetBrightness(self.options.backlight));
                 }
-                AppEvent::ThumbMove(p) if p.y < -32 => {
+                Button::Down => {
                     self.options.backlight = self.options.backlight.saturating_sub(1);
                     return Some(AppRequest::SetBrightness(self.options.backlight));
                 }
                 _ => {}
             },
-            ViewportNode::SleepTimeout => match ev {
-                AppEvent::ButtonA => {
+            ViewportNode::SleepTimeout => match btn {
+                Button::A => {
                     self.switch_to(ViewportNode::ConfigMenu);
                     return Some(AppRequest::StoreOptions(self.options));
                 }
-                AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
-                AppEvent::ThumbMove(p) if p.y > 32 => {
+                Button::B => self.switch_to(ViewportNode::ConfigMenu),
+                Button::Up => {
                     self.options.sleep_timeout =
                         self.options.sleep_timeout.saturating_add(5).clamp(10, 90)
                 }
-                AppEvent::ThumbMove(p) if p.y < -32 => {
+                Button::Down => {
                     self.options.sleep_timeout =
                         self.options.sleep_timeout.saturating_sub(5).clamp(10, 90)
                 }
                 _ => {}
             },
-            ViewportNode::About => match ev {
-                AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
+            ViewportNode::About => match btn {
+                Button::A | Button::B => self.switch_to(ViewportNode::ConfigMenu),
                 _ => {}
             },
         }
         None
+    }
+
+    pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
+        match ev {
+            AppEvent::ClockTick => {
+                self.frame = self.frame.wrapping_add(1);
+                self.sleep_timeout = self.sleep_timeout.wrapping_add(1);
+                if self.sleep_timeout / 10 > self.options.sleep_timeout as _ {
+                    Some(AppRequest::SwitchOff)
+                } else {
+                    None
+                }
+            }
+            AppEvent::IrCommand(cmd) => {
+                self.rx_cmd = cmd;
+                None
+            }
+        }
     }
 }
 
@@ -186,15 +183,15 @@ impl Options {
     pub const PAGE: FlashPage = FlashPage(31);
 
     pub fn load() -> Self {
-        let opts = unsafe { core::ptr::read(Self::PAGE.to_address() as *const u32) };
-        let [_, _, backlight, sleep_timeout] = opts.to_le_bytes();
+        let opts = unsafe { core::ptr::read(Self::PAGE.to_address() as *const u16) };
+        let [backlight, sleep_timeout] = opts.to_le_bytes();
         Self {
             backlight: backlight.clamp(0, 10),
             sleep_timeout: sleep_timeout.clamp(10, 60),
         }
     }
 
-    pub fn into_bytes(self) -> [u8; 4] {
-        [0, 0, self.backlight, self.sleep_timeout]
+    pub fn into_bytes(self) -> [u8; 2] {
+        [self.backlight, self.sleep_timeout]
     }
 }
