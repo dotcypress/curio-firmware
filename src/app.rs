@@ -11,6 +11,12 @@ pub enum AppEvent {
     IrCommand(NecCommand),
 }
 
+impl AppEvent {
+    pub fn is_user_event(&self) -> bool {
+        matches!(self, AppEvent::ButtonA | AppEvent::ButtonB)
+    }
+}
+
 pub enum AppRequest {
     SwitchOff,
     SetBrightness(u8),
@@ -21,6 +27,7 @@ pub enum AppRequest {
 pub struct App {
     pub frame: u8,
     pub options: Options,
+    pub sleep_timeout: u32,
     pub battery_voltage: Glyph,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
@@ -50,6 +57,7 @@ impl App {
             frame: 0,
             tx_cmd: cmd,
             rx_cmd: cmd,
+            sleep_timeout: 0,
             active_widget: ViewportNode::MainMenu,
         }
     }
@@ -58,14 +66,22 @@ impl App {
         self.active_widget = widget;
     }
 
-    pub fn invalidate(&mut self, ui: &mut Viewport) {
+    pub fn tick(&mut self) -> Option<AppRequest> {
         self.frame = self.frame.wrapping_add(1);
-        ui.update(self);
+        self.sleep_timeout = self.sleep_timeout.wrapping_add(1);
+        if self.sleep_timeout / 10 > self.options.sleep_timeout as _ {
+            return Some(AppRequest::SwitchOff);
+        }
+        None
     }
 
     pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
+        if ev.is_user_event() {
+            self.sleep_timeout = 0;
+        }
         match self.active_widget {
             ViewportNode::MainMenu => match ev {
+                AppEvent::ButtonB => return Some(AppRequest::SwitchOff),
                 AppEvent::ButtonA => match self.main_menu.selected() {
                     MenuItem::Config => self.switch_to(ViewportNode::ConfigMenu),
                     MenuItem::Scan => self.switch_to(ViewportNode::Scan),
@@ -160,7 +176,7 @@ impl Options {
     pub fn load() -> Self {
         let opts = unsafe { core::ptr::read(Self::PAGE.to_address() as *const u32) };
         let [_, _, mut backlight, mut sleep_timeout] = opts.to_le_bytes();
-        if sleep_timeout < 10 || sleep_timeout > 90 {
+        if !(10..=90).contains(&sleep_timeout) {
             sleep_timeout = 90;
             backlight = 8;
         }
@@ -170,7 +186,7 @@ impl Options {
         }
     }
 
-    pub fn to_bytes(&self) -> [u8; 4] {
+    pub fn to_bytes(self) -> [u8; 4] {
         [0, 0, self.backlight, self.sleep_timeout]
     }
 }

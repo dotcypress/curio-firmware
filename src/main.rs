@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-// #![deny(warnings)]
+#![deny(warnings)]
 
 extern crate panic_halt;
 extern crate rtic;
@@ -13,6 +13,7 @@ use defmt_rtt as _;
 
 use app::*;
 use curio_bsp::hal::flash::WriteErase;
+use curio_bsp::hal::gpio::SignalEdge;
 use curio_bsp::hal::power::*;
 use curio_bsp::hal::rcc::*;
 use curio_bsp::hal::timer::Timer;
@@ -40,7 +41,6 @@ mod curio {
         ui: Viewport,
         scb: stm32::SCB,
         pwr: Power,
-        rcc: Rcc,
         flash: Option<FLASH>,
         ui_timer: Timer<stm32::TIM14>,
         render_timer: Timer<stm32::TIM17>,
@@ -49,7 +49,13 @@ mod curio {
     #[init]
     fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         defmt::info!("init");
+        let scb = ctx.core.SCB;
+        let flash = Some(ctx.device.FLASH);
         let mut rcc = ctx.device.RCC.constrain();
+
+        let mut pwr = ctx.device.PWR.constrain(&mut rcc);
+        pwr.clear_standby_flag();
+        pwr.enable_wakeup_lane(WakeUp::Line4, SignalEdge::Falling);
 
         let Curio {
             mut control,
@@ -78,10 +84,6 @@ mod curio {
         render_timer.start(100.millis());
         render_timer.listen();
 
-        let pwr = ctx.device.PWR.constrain(&mut rcc);
-        let scb = ctx.core.SCB;
-        let flash = Some(ctx.device.FLASH);
-
         let options = Options::load();
         display.set_brightness(options.backlight);
 
@@ -104,7 +106,6 @@ mod curio {
                 ui,
                 render_timer,
                 pwr,
-                rcc,
                 scb,
             },
             init::Monotonics(),
@@ -154,31 +155,25 @@ mod curio {
         let mut app = ctx.shared.app;
         let mut display = ctx.shared.display;
 
-        app.lock(|app| app.invalidate(ui));
+        app.lock(|app| {
+            app.tick().map(app_request::spawn);
+            ui.update(app);
+        });
         display.lock(|display| ui.render(display));
 
         render_timer.clear_irq();
     }
 
-    #[task(local = [flash, pwr, rcc, scb], shared = [i2c, ir, display])]
+    #[task(local = [flash, pwr, scb], shared = [i2c, ir, display])]
     fn app_request(ctx: app_request::Context, req: AppRequest) {
         match req {
             AppRequest::SetBrightness(val) => {
                 let mut display = ctx.shared.display;
                 display.lock(|display| display.set_brightness(val));
-                //TODO: save to flash
             }
             AppRequest::TransmitIRCommand(cmd) => {
                 let mut ir = ctx.shared.ir;
                 ir.lock(|ir| ir.send(&cmd));
-            }
-            AppRequest::SwitchOff => {
-                let pwr = ctx.local.pwr;
-                let mut display = ctx.shared.display;
-                display.lock(|display| display.power_off());
-                //TODO: Slow down clocks to 1MHz
-                pwr.set_mode(PowerMode::UltraLowPower(LowPowerMode::StopMode2));
-                ctx.local.scb.set_sleepdeep();
             }
             AppRequest::StoreOptions(options) => {
                 if let Some(flash) = ctx.local.flash.take() {
@@ -192,13 +187,19 @@ mod curio {
                     });
                 }
             }
+            AppRequest::SwitchOff => {
+                let pwr = ctx.local.pwr;
+                pwr.set_mode(PowerMode::LowPower(LowPowerMode::Shutdown));
+                pwr.clear_wakeup_flag(WakeUp::Line4);
+                ctx.local.scb.set_sleepdeep();
+            }
         }
     }
 
     #[idle]
     fn idle(_: idle::Context) -> ! {
         loop {
-            rtic::export::nop();
+            rtic::export::wfi();
         }
     }
 }
