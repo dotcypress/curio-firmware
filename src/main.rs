@@ -122,9 +122,12 @@ mod curio {
         let mut app = ctx.shared.app;
         let mut control = ctx.shared.control;
 
-        let thumb = control.lock(|ctrl| ctrl.thumb());
-        app.lock(|app| app.handle_event(AppEvent::ThumbMove(thumb)))
-            .map(app_request::spawn);
+        let (thumb, battery_voltage) = control.lock(|ctrl| (ctrl.thumb(), ctrl.battery_voltage()));
+        app.lock(|app| {
+            app.handle_event(AppEvent::BatteryVoltage(battery_voltage));
+            app.handle_event(AppEvent::ThumbMove(thumb))
+        })
+        .map(app_request::spawn);
 
         ctx.local.ui_timer.clear_irq();
     }

@@ -5,17 +5,30 @@ use curio_bsp::Display;
 use klaptik::*;
 
 widget_group! {
+    BatteryWidget<&App>,
+    {
+        icon: GlyphIcon, BatterySprite, 0, Point::new(104, 0);
+     },
+    |widget: &mut BatteryWidget, state: &App| {
+        let level = state.battery_voltage.saturating_sub(2200) / 200;
+        widget.icon.update(level.clamp(0, 4) as _);
+    }
+}
+
+widget_group! {
     ScanWidget<&App>,
     {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Scan, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Scan, Point::new(24, 0);
+        battery: BatteryWidget;
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
         addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
         cmd: SpriteLabel<2>, FontSprite, "00", Point::new(80, 40);
     },
     |widget: &mut ScanWidget, state: &App| {
+        widget.battery.update(state);
         write!(widget.addr, "{:0>2}", state.rx_cmd.addr).ok();
         write!(widget.cmd, "{:0>2}", state.rx_cmd.cmd).ok();
     }
@@ -27,12 +40,14 @@ widget_group! {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Send, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Send, Point::new(24, 0);
+        battery: BatteryWidget;
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
         addr: SpriteLabel<2>, FontSprite, "00", Point::new(16, 40);
         cmd: SpriteLabel<2>, FontSprite, "00", Point::new(80, 40);
     },
     |widget: &mut SendWidget, state: &App| {
+        widget.battery.update(state);
         write!(widget.addr, "{:0>2}", state.tx_cmd.addr).ok();
         write!(widget.cmd, "{:0>2}", state.tx_cmd.cmd).ok();
     }

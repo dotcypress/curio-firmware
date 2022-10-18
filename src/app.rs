@@ -8,6 +8,7 @@ pub enum AppEvent {
     ButtonB,
     ThumbMove(Point),
     IrCommand(NecCommand),
+    BatteryVoltage(u16),
 }
 
 pub enum AppRequest {
@@ -20,6 +21,7 @@ pub struct App {
     pub frame: u8,
     pub backlight: u8,
     pub sleep_timeout: u8,
+    pub battery_voltage: u16,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
     pub rx_cmd: NecCommand,
@@ -42,12 +44,14 @@ impl App {
             cmd: 0,
             repeat: false,
         };
+
         Self {
             main_menu,
             config_menu,
             backlight: 8,
             frame: 0,
             sleep_timeout: 15,
+            battery_voltage: 3300,
             tx_cmd: cmd,
             rx_cmd: cmd,
             active_widget: ViewportNode::MainMenu,
@@ -64,6 +68,18 @@ impl App {
     }
 
     pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
+        match ev {
+            AppEvent::IrCommand(cmd) => {
+                self.rx_cmd = cmd;
+                return None;
+            }
+            AppEvent::BatteryVoltage(mv) => {
+                self.battery_voltage = mv;
+                return None;
+            }
+            _ => {}
+        }
+
         match self.active_widget {
             ViewportNode::MainMenu => match ev {
                 AppEvent::ButtonA => match self.main_menu.selected() {
@@ -76,11 +92,11 @@ impl App {
                 AppEvent::ThumbMove(p) if p.y < -32 => self.main_menu.move_down(),
                 _ => {}
             },
-            ViewportNode::Scan => match ev {
-                AppEvent::IrCommand(cmd) => self.rx_cmd = cmd,
-                AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
-                _ => {}
-            },
+            ViewportNode::Scan => {
+                if let AppEvent::ButtonB = ev {
+                    self.switch_to(ViewportNode::MainMenu)
+                }
+            }
             ViewportNode::Send => match ev {
                 AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),

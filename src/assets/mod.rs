@@ -73,6 +73,12 @@ pub const WebsiteSprite: RomSprite = RomSprite::new(
     include_bytes!("website.bin"),
 );
 
+pub const BatterySprite: RomSprite = RomSprite::new(
+    Glyphs::Sequential(5),
+    Size::new(16, 16),
+    include_bytes!("battery.bin"),
+);
+
 pub const FontSprite: RomSprite = RomSprite::new(
     Glyphs::Alphabet(b"0123456789ABCDEFsx?%. "),
     Size::new(16, 24),
