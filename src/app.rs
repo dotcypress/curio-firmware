@@ -8,7 +8,6 @@ pub enum AppEvent {
     ButtonB,
     ThumbMove(Point),
     IrCommand(NecCommand),
-    BatteryVoltage(u16),
 }
 
 pub enum AppRequest {
@@ -21,7 +20,7 @@ pub struct App {
     pub frame: u8,
     pub backlight: u8,
     pub sleep_timeout: u8,
-    pub battery_voltage: u16,
+    pub battery_voltage: Glyph,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
     pub rx_cmd: NecCommand,
@@ -29,14 +28,8 @@ pub struct App {
     pub config_menu: Menu,
 }
 
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl App {
-    pub fn new() -> Self {
+    pub fn new(battery_voltage: u16) -> Self {
         let main_menu = Menu::new(&[MenuItem::Config, MenuItem::Scan, MenuItem::Send]);
         let config_menu = Menu::new(&[MenuItem::About, MenuItem::Sleep, MenuItem::Backlight]);
         let cmd = NecCommand {
@@ -45,13 +38,16 @@ impl App {
             repeat: false,
         };
 
+        let battery_voltage = battery_voltage.saturating_sub(2200) / 200;
+        let battery_voltage = battery_voltage.clamp(0, 4) as _;
+
         Self {
             main_menu,
             config_menu,
+            battery_voltage,
             backlight: 8,
             frame: 0,
             sleep_timeout: 15,
-            battery_voltage: 3300,
             tx_cmd: cmd,
             rx_cmd: cmd,
             active_widget: ViewportNode::MainMenu,
@@ -68,18 +64,6 @@ impl App {
     }
 
     pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
-        match ev {
-            AppEvent::IrCommand(cmd) => {
-                self.rx_cmd = cmd;
-                return None;
-            }
-            AppEvent::BatteryVoltage(mv) => {
-                self.battery_voltage = mv;
-                return None;
-            }
-            _ => {}
-        }
-
         match self.active_widget {
             ViewportNode::MainMenu => match ev {
                 AppEvent::ButtonA => match self.main_menu.selected() {
@@ -92,11 +76,13 @@ impl App {
                 AppEvent::ThumbMove(p) if p.y < -32 => self.main_menu.move_down(),
                 _ => {}
             },
-            ViewportNode::Scan => {
-                if let AppEvent::ButtonB = ev {
-                    self.switch_to(ViewportNode::MainMenu)
+            ViewportNode::Scan => match ev {
+                AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),
+                AppEvent::IrCommand(cmd) => {
+                    self.rx_cmd = cmd;
                 }
-            }
+                _ => {}
+            },
             ViewportNode::Send => match ev {
                 AppEvent::ButtonA => return Some(AppRequest::TransmitIRCommand(self.tx_cmd)),
                 AppEvent::ButtonB => self.switch_to(ViewportNode::MainMenu),

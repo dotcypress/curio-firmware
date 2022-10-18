@@ -48,7 +48,7 @@ mod curio {
         let mut rcc = ctx.device.RCC.constrain();
 
         let Curio {
-            control,
+            mut control,
             mut display,
             i2c,
             ir,
@@ -77,7 +77,7 @@ mod curio {
         let pwr = ctx.device.PWR.constrain(&mut rcc);
         let scb = ctx.core.SCB;
 
-        let app = App::new();
+        let app = App::new(control.battery_voltage());
         let ui = Viewport::new();
 
         display.set_brightness(8);
@@ -122,12 +122,9 @@ mod curio {
         let mut app = ctx.shared.app;
         let mut control = ctx.shared.control;
 
-        let (thumb, battery_voltage) = control.lock(|ctrl| (ctrl.thumb(), ctrl.battery_voltage()));
-        app.lock(|app| {
-            app.handle_event(AppEvent::BatteryVoltage(battery_voltage));
-            app.handle_event(AppEvent::ThumbMove(thumb))
-        })
-        .map(app_request::spawn);
+        let thumb = control.lock(|ctrl| ctrl.thumb());
+        app.lock(|app| app.handle_event(AppEvent::ThumbMove(thumb)))
+            .map(app_request::spawn);
 
         ctx.local.ui_timer.clear_irq();
     }
