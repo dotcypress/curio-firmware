@@ -1,5 +1,6 @@
 use crate::assets::MenuItem;
 use crate::ui::*;
+use curio_bsp::hal::flash::FlashPage;
 use curio_bsp::protocol::nec::NecCommand;
 use klaptik::*;
 
@@ -14,12 +15,12 @@ pub enum AppRequest {
     SwitchOff,
     SetBrightness(u8),
     TransmitIRCommand(NecCommand),
+    StoreOptions(Options),
 }
 
 pub struct App {
     pub frame: u8,
-    pub backlight: u8,
-    pub sleep_timeout: u8,
+    pub options: Options,
     pub battery_voltage: Glyph,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
@@ -29,7 +30,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(battery_voltage: u16) -> Self {
+    pub fn new(options: Options, battery_voltage: u16) -> Self {
         let main_menu = Menu::new(&[MenuItem::Config, MenuItem::Scan, MenuItem::Send]);
         let config_menu = Menu::new(&[MenuItem::About, MenuItem::Sleep, MenuItem::Backlight]);
         let cmd = NecCommand {
@@ -45,9 +46,8 @@ impl App {
             main_menu,
             config_menu,
             battery_voltage,
-            backlight: 8,
+            options,
             frame: 0,
-            sleep_timeout: 15,
             tx_cmd: cmd,
             rx_cmd: cmd,
             active_widget: ViewportNode::MainMenu,
@@ -108,24 +108,34 @@ impl App {
                 _ => {}
             },
             ViewportNode::Backlight => match ev {
-                AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
+                AppEvent::ButtonA => {
+                    self.switch_to(ViewportNode::ConfigMenu);
+                    return Some(AppRequest::StoreOptions(self.options));
+                }
+                AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
                 AppEvent::ThumbMove(p) if p.y > 32 => {
-                    self.backlight = self.backlight.saturating_add(1).clamp(0, 10);
-                    return Some(AppRequest::SetBrightness(self.backlight));
+                    self.options.backlight = self.options.backlight.saturating_add(1).clamp(0, 10);
+                    return Some(AppRequest::SetBrightness(self.options.backlight));
                 }
                 AppEvent::ThumbMove(p) if p.y < -32 => {
-                    self.backlight = self.backlight.saturating_sub(1);
-                    return Some(AppRequest::SetBrightness(self.backlight));
+                    self.options.backlight = self.options.backlight.saturating_sub(1);
+                    return Some(AppRequest::SetBrightness(self.options.backlight));
                 }
                 _ => {}
             },
             ViewportNode::SleepTimeout => match ev {
-                AppEvent::ButtonA | AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
+                AppEvent::ButtonA => {
+                    self.switch_to(ViewportNode::ConfigMenu);
+                    return Some(AppRequest::StoreOptions(self.options));
+                }
+                AppEvent::ButtonB => self.switch_to(ViewportNode::ConfigMenu),
                 AppEvent::ThumbMove(p) if p.y > 32 => {
-                    self.sleep_timeout = self.sleep_timeout.saturating_add(5).clamp(10, 60)
+                    self.options.sleep_timeout =
+                        self.options.sleep_timeout.saturating_add(5).clamp(10, 90)
                 }
                 AppEvent::ThumbMove(p) if p.y < -32 => {
-                    self.sleep_timeout = self.sleep_timeout.saturating_sub(5).clamp(10, 60)
+                    self.options.sleep_timeout =
+                        self.options.sleep_timeout.saturating_sub(5).clamp(10, 90)
                 }
                 _ => {}
             },
@@ -135,5 +145,32 @@ impl App {
             },
         }
         None
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Options {
+    pub backlight: u8,
+    pub sleep_timeout: u8,
+}
+
+impl Options {
+    pub const PAGE: FlashPage = FlashPage(31);
+
+    pub fn load() -> Self {
+        let opts = unsafe { core::ptr::read(Self::PAGE.to_address() as *const u32) };
+        let [_, _, mut backlight, mut sleep_timeout] = opts.to_le_bytes();
+        if sleep_timeout < 10 || sleep_timeout > 90 {
+            sleep_timeout = 90;
+            backlight = 8;
+        }
+        Self {
+            backlight,
+            sleep_timeout,
+        }
+    }
+
+    pub fn to_bytes(&self) -> [u8; 4] {
+        [0, 0, self.backlight, self.sleep_timeout]
     }
 }
