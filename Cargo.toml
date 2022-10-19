@@ -12,8 +12,6 @@ authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
 cortex-m-rtic = "1.1.3"
 curio-bsp = { git = "https://github.com/dotcypress/curio"}
 klaptik = { git = "https://github.com/dotcypress/klaptik", features = ["st7567"] }
-defmt = "0.3.2"
-defmt-rtt = "0.3.2"
 panic-halt = "0.2.0"
 
 [profile.dev]

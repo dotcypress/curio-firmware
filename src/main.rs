@@ -7,9 +7,8 @@ extern crate rtic;
 
 mod app;
 mod assets;
+mod game;
 mod ui;
-
-use defmt_rtt as _;
 
 use app::*;
 use curio_bsp::hal::flash::WriteErase;
@@ -48,7 +47,6 @@ mod curio {
 
     #[init]
     fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
-        defmt::info!("init");
         let scb = ctx.core.SCB;
         let flash = Some(ctx.device.FLASH);
         let mut rcc = ctx.device.RCC.constrain();
@@ -90,7 +88,6 @@ mod curio {
         let app = App::new(options, control.battery_voltage());
         let ui = Viewport::new();
 
-        defmt::info!("init done");
         (
             Shared {
                 app,

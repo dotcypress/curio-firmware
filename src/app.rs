@@ -1,4 +1,5 @@
 use crate::assets::MenuItem;
+use crate::game::Minesweeper;
 use crate::ui::*;
 use curio_bsp::hal::flash::FlashPage;
 use curio_bsp::protocol::nec::NecCommand;
@@ -22,6 +23,7 @@ pub struct App {
     pub sleep_timeout: u32,
     pub battery_voltage: Glyph,
     pub options: Options,
+    pub game: Minesweeper,
     pub active_widget: ViewportNode,
     pub tx_cmd: NecCommand,
     pub rx_cmd: NecCommand,
@@ -42,12 +44,13 @@ impl App {
 
         let battery_voltage = battery_voltage.saturating_sub(2200) / 200;
         let battery_voltage = battery_voltage.clamp(0, 4) as _;
-
+        let game = Minesweeper::new(8);
         Self {
             main_menu,
             config_menu,
             battery_voltage,
             options,
+            game,
             frame: 0,
             tx_cmd: cmd,
             rx_cmd: cmd,
@@ -65,6 +68,7 @@ impl App {
         self.sleep_timeout = 0;
 
         match self.active_widget {
+            ViewportNode::Game => self.game.button_click(btn),
             ViewportNode::MainMenu => match btn {
                 Button::A => match self.main_menu.selected() {
                     MenuItem::Config => self.switch_to(ViewportNode::ConfigMenu),
@@ -147,7 +151,8 @@ impl App {
                 _ => {}
             },
             ViewportNode::About => match btn {
-                Button::A | Button::B => self.switch_to(ViewportNode::ConfigMenu),
+                Button::A => self.switch_to(ViewportNode::Game),
+                Button::B => self.switch_to(ViewportNode::ConfigMenu),
                 _ => {}
             },
         }

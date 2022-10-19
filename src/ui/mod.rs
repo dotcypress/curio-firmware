@@ -1,4 +1,5 @@
 use crate::app::App;
+use crate::game::GameUI;
 use klaptik::*;
 
 mod menu;
@@ -18,10 +19,12 @@ widget_mux! {
         backlight: BacklightWidget;
         sleep_timeout: SleepTimeoutWidget;
         about: AboutWidget;
+        game: GameUI;
     },
     |widget: &mut Viewport, state: &App| {
         widget.main_menu.update(&state.main_menu);
         widget.config_menu.update(&state.config_menu);
+        widget.game.update(&state.game);
         widget.backlight.update(state.options.backlight);
         widget.sleep_timeout.update(state.options.sleep_timeout);
         widget.scan.update(state);
