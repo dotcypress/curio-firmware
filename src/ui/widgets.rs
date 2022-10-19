@@ -13,8 +13,8 @@ widget_group! {
         battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
-        addr: SpriteLabel<3>, FontSprite, "   ", Point::new(8, 40);
-        cmd: SpriteLabel<3>, FontSprite, "   ", Point::new(72, 40);
+        addr: Label<3>, FontSprite, "   ", Point::new(8, 40);
+        cmd: Label<3>, FontSprite, "   ", Point::new(72, 40);
     },
     |widget: &mut ScanWidget, state: &App| {
         widget.battery.update(state.battery_voltage);
@@ -32,8 +32,8 @@ widget_group! {
         battery: GlyphIcon, BatterySprite, 0, Point::new(112, 0);
         addr_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Address, Point::new(12, 24);
         cmd_title: SubMenuIcon, SubMenuSprite, SubMenuItem::Command, Point::new(72, 24);
-        addr: SpriteLabel<3>, FontSprite, "000", Point::new(8, 40);
-        cmd: SpriteLabel<3>, FontSprite, "000", Point::new(72, 40);
+        addr: Label<3>, FontSprite, "000", Point::new(8, 40);
+        cmd: Label<3>, FontSprite, "000", Point::new(72, 40);
     },
     |widget: &mut SendWidget, state: &App| {
         widget.battery.update(state.battery_voltage);
@@ -48,7 +48,7 @@ widget_group! {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Backlight, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Backlight, Point::new(24, 0);
-        brightness: SpriteLabel<4>, FontSprite, "100%", Point::new(24, 24);
+        brightness: Label<4>, FontSprite, "100%", Point::new(24, 24);
     },
     |widget: &mut BacklightWidget, brightness: u8| {
         write!(widget.brightness, "{: >3}%",  brightness * 10).unwrap();
@@ -61,7 +61,7 @@ widget_group! {
         bg: Background, Point::zero(), Display::SIZE;
         icon: MenuIcon, IconSprite, MenuItem::Sleep, Point::zero();
         title: MenuIcon, MenuMediumSprite, MenuItem::Sleep, Point::new(24, 0);
-        value: SpriteLabel<3>, FontSprite, "10s", Point::new(32, 24);
+        value: Label<3>, FontSprite, "10s", Point::new(32, 24);
     },
     |widget: &mut SleepTimeoutWidget, timeout: u8| {
         write!(widget.value, "{timeout}s").unwrap();

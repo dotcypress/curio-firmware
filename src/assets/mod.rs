@@ -2,10 +2,8 @@
 
 use klaptik::*;
 
-pub type GlyphIcon = RomIcon<Glyph>;
-pub type MenuIcon = RomIcon<MenuItem>;
-pub type SubMenuIcon = RomIcon<SubMenuItem>;
-pub type SpriteLabel<const LEN: usize> = Label<RomSprite, LEN>;
+pub type MenuIcon = Icon<MenuItem>;
+pub type SubMenuIcon = Icon<SubMenuItem>;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MenuItem {
@@ -37,49 +35,49 @@ impl From<SubMenuItem> for Glyph {
     }
 }
 
-pub const IconSprite: RomSprite = RomSprite::new(
+pub const IconSprite: Sprite = Sprite::new(
     Glyphs::Sequential(8),
     Size::new(16, 16),
     include_bytes!("icons.bin"),
 );
 
-pub const MenuMediumSprite: RomSprite = RomSprite::new(
+pub const MenuMediumSprite: Sprite = Sprite::new(
     Glyphs::Sequential(8),
     Size::new(56, 16),
     include_bytes!("menu_medium.bin"),
 );
 
-pub const MenuLargeSprite: RomSprite = RomSprite::new(
+pub const MenuLargeSprite: Sprite = Sprite::new(
     Glyphs::Sequential(8),
     Size::new(104, 32),
     include_bytes!("menu_large.bin"),
 );
 
-pub const SubMenuSprite: RomSprite = RomSprite::new(
+pub const SubMenuSprite: Sprite = Sprite::new(
     Glyphs::Sequential(5),
     Size::new(56, 8),
     include_bytes!("submenu.bin"),
 );
 
-pub const AboutSprite: RomSprite = RomSprite::new(
+pub const AboutSprite: Sprite = Sprite::new(
     Glyphs::Sequential(1),
     Size::new(88, 32),
     include_bytes!("about.bin"),
 );
 
-pub const WebsiteSprite: RomSprite = RomSprite::new(
+pub const WebsiteSprite: Sprite = Sprite::new(
     Glyphs::Sequential(1),
     Size::new(104, 8),
     include_bytes!("website.bin"),
 );
 
-pub const BatterySprite: RomSprite = RomSprite::new(
+pub const BatterySprite: Sprite = Sprite::new(
     Glyphs::Sequential(5),
     Size::new(16, 16),
     include_bytes!("battery.bin"),
 );
 
-pub const FontSprite: RomSprite = RomSprite::new(
+pub const FontSprite: Sprite = Sprite::new(
     Glyphs::Alphabet(b"0123456789ABCDEFsx?%. "),
     Size::new(16, 24),
     include_bytes!("font_24.bin"),

@@ -300,7 +300,7 @@ dependencies = [
 [[package]]
 name = "klaptik"
 version = "0.0.4"
-source = "git+https://github.com/dotcypress/klaptik#f060941858f5f916fb8cef4452687a76232b677a"
+source = "git+https://github.com/dotcypress/klaptik#d3f57fcf6b2e77e000b0959957b1d1a11eeb45bf"
 dependencies = [
  "embedded-graphics-core",
  "embedded-hal",
