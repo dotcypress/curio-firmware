@@ -8,6 +8,7 @@ use klaptik::*;
 
 pub enum AppEvent {
     ClockTick,
+    Button(Button),
     IrCommand(NecCommand),
 }
 
@@ -56,7 +57,7 @@ impl App {
             rx_cmd: cmd,
             sleep_timeout: 0,
             address_edit: false,
-            active_widget: ViewportNode::MainMenu,
+            active_widget: ViewportNode::Scan,
         }
     }
 
@@ -64,7 +65,26 @@ impl App {
         self.active_widget = widget;
     }
 
-    pub fn handle_button(&mut self, btn: Button) -> Option<AppRequest> {
+    pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
+        match ev {
+            AppEvent::ClockTick => {
+                self.frame = self.frame.wrapping_add(1);
+                self.sleep_timeout = self.sleep_timeout.wrapping_add(1);
+                if self.sleep_timeout / 10 > self.options.sleep_timeout as _ {
+                    Some(AppRequest::SwitchOff)
+                } else {
+                    None
+                }
+            }
+            AppEvent::IrCommand(cmd) => {
+                self.rx_cmd = cmd;
+                None
+            }
+            AppEvent::Button(btn) => self.handle_button(btn),
+        }
+    }
+
+    fn handle_button(&mut self, btn: Button) -> Option<AppRequest> {
         self.sleep_timeout = 0;
 
         match self.active_widget {
@@ -157,24 +177,6 @@ impl App {
             },
         }
         None
-    }
-
-    pub fn handle_event(&mut self, ev: AppEvent) -> Option<AppRequest> {
-        match ev {
-            AppEvent::ClockTick => {
-                self.frame = self.frame.wrapping_add(1);
-                self.sleep_timeout = self.sleep_timeout.wrapping_add(1);
-                if self.sleep_timeout / 10 > self.options.sleep_timeout as _ {
-                    Some(AppRequest::SwitchOff)
-                } else {
-                    None
-                }
-            }
-            AppEvent::IrCommand(cmd) => {
-                self.rx_cmd = cmd;
-                None
-            }
-        }
     }
 }
 

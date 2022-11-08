@@ -16,7 +16,7 @@ use curio_bsp::hal::gpio::SignalEdge;
 use curio_bsp::hal::power::*;
 use curio_bsp::hal::rcc::*;
 use curio_bsp::hal::timer::Timer;
-use curio_bsp::stm32::FLASH;
+use curio_bsp::stm32::*;
 use curio_bsp::*;
 use klaptik::Widget;
 use ui::*;
@@ -32,6 +32,7 @@ mod curio {
         control: Control,
         display: Display,
         ir: IrTransceiver,
+        exti: EXTI,
         i2c: I2cDev,
     }
 
@@ -49,8 +50,8 @@ mod curio {
     fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let scb = ctx.core.SCB;
         let flash = Some(ctx.device.FLASH);
+        let mut exti = ctx.device.EXTI;
         let mut rcc = ctx.device.RCC.constrain();
-
         let mut pwr = ctx.device.PWR.constrain(&mut rcc);
         pwr.clear_standby_flag();
         pwr.enable_wakeup_lane(WakeUp::Line4, SignalEdge::Falling);
@@ -65,12 +66,12 @@ mod curio {
             ctx.device.GPIOA,
             ctx.device.GPIOB,
             ctx.device.GPIOC,
-            ctx.device.EXTI,
             ctx.device.TIM1,
             ctx.device.TIM16,
             ctx.device.SPI1,
             ctx.device.I2C1,
             i2c::Config::new(400.kHz()),
+            &mut exti,
             &mut rcc,
         );
 
@@ -93,6 +94,7 @@ mod curio {
                 app,
                 control,
                 display,
+                exti,
                 i2c,
                 ir,
             },
@@ -108,13 +110,36 @@ mod curio {
         )
     }
 
-    #[task(binds = EXTI2_3, shared = [app, control])]
+    #[task(binds = EXTI2_3, shared = [app, control, exti])]
     fn button_click(ctx: button_click::Context) {
-        let mut app = ctx.shared.app;
-        let mut control = ctx.shared.control;
+        let button_click::SharedResources {
+            mut app,
+            mut control,
+            mut exti,
+        } = ctx.shared;
+
+        exti.lock(|exti| {
+            exti.unpend(hal::exti::Event::GPIO2);
+            exti.unpend(hal::exti::Event::GPIO3);
+        });
 
         if let Some(btn) = control.lock(|ctrl| ctrl.read_buttons()) {
-            app.lock(|app| app.handle_button(btn))
+            app.lock(|app| app.handle_event(AppEvent::Button(btn)))
+                .map(app_request::spawn);
+        }
+    }
+
+    #[task(binds = EXTI4_15, shared = [app, exti, ir])]
+    fn ir_rx(ctx: ir_rx::Context) {
+        let ir_rx::SharedResources {
+            mut app,
+            mut exti,
+            mut ir,
+        } = ctx.shared;
+        exti.lock(|exti| exti.unpend(hal::exti::Event::GPIO12));
+
+        if let Ok(Some(cmd)) = ir.lock(|ir| ir.event()) {
+            app.lock(|app| app.handle_event(AppEvent::IrCommand(cmd)))
                 .map(app_request::spawn);
         }
     }
@@ -125,22 +150,17 @@ mod curio {
         let mut control = ctx.shared.control;
 
         if let Some(btn) = control.lock(|ctrl| ctrl.read_dpad()) {
-            app.lock(|app| app.handle_button(btn))
+            app.lock(|app| app.handle_event(AppEvent::Button(btn)))
                 .map(app_request::spawn);
         }
 
         ctx.local.ui_timer.clear_irq();
     }
 
-    #[task(binds = TIM16, shared = [app, ir])]
+    #[task(binds = TIM16, shared = [ir])]
     fn ir_timer_tick(ctx: ir_timer_tick::Context) {
-        let mut app = ctx.shared.app;
         let mut ir = ctx.shared.ir;
-
-        if let Ok(Some(cmd)) = ir.lock(|ir| ir.poll()) {
-            app.lock(|app| app.handle_event(AppEvent::IrCommand(cmd)))
-                .map(app_request::spawn);
-        }
+        ir.lock(|ir| ir.tick());
     }
 
     #[task(binds = TIM17, local = [ui, render_timer], shared = [app, display])]
@@ -160,7 +180,7 @@ mod curio {
         render_timer.clear_irq();
     }
 
-    #[task(local = [flash, pwr, scb], shared = [i2c, ir, display])]
+    #[task(capacity = 4, local = [flash, pwr, scb], shared = [i2c, ir, display])]
     fn app_request(ctx: app_request::Context, req: AppRequest) {
         match req {
             AppRequest::SetBrightness(val) => {

@@ -66,12 +66,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
-name = "byte-slice-cast"
-version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0a5e3906bcbf133e33c1d4d95afc664ad37fbdb9f6568d8043e7ea8c27d93d3"
-
-[[package]]
 name = "byteorder"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -158,7 +152,7 @@ dependencies = [
 [[package]]
 name = "curio-bsp"
 version = "0.0.1"
-source = "git+https://github.com/dotcypress/curio#4ecb28c64cd76fedaeac51b1b2cdf0f294a4243e"
+source = "git+https://github.com/dotcypress/curio#30cb63fb36db73278302c8448b876a1bd76612cd"
 dependencies = [
  "infrared",
  "klaptik",
@@ -203,33 +197,6 @@ name = "defmt-parser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0db23d29972d99baa3de2ee2ae3f104c10564a6d05a346eb3f4c4f2c0525a06e"
-
-[[package]]
-name = "display-interface"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7517c040926d7b02b111884aa089177db80878533127f7c1b480d852c5fb4112"
-
-[[package]]
-name = "display-interface-i2c"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4895cd4e54e5536ef370d7f1eec787aad8275dd8ad15815aebfa71dd847b4ebf"
-dependencies = [
- "display-interface",
- "embedded-hal",
-]
-
-[[package]]
-name = "display-interface-spi"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "489378ad054862146fbd1f09f51d585ccbe4bd1e2feadcda2a13ac33f840e1a5"
-dependencies = [
- "byte-slice-cast",
- "display-interface",
- "embedded-hal",
-]
 
 [[package]]
 name = "embedded-graphics-core"
@@ -319,30 +286,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "ist7920"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56fe11ac05e0681ec15bf61b2129ad6502fd606841db8ee92870ea2764019931"
-dependencies = [
- "display-interface",
- "display-interface-spi",
- "embedded-graphics-core",
- "embedded-hal",
-]
-
-[[package]]
 name = "klaptik"
 version = "0.0.4"
-source = "git+https://github.com/dotcypress/klaptik#2f678969ba056a46fb8db2b7fe7545c7711db246"
+source = "git+https://github.com/dotcypress/klaptik#6b3925a3f11817fdbdc303847068676af9e723ed"
 dependencies = [
- "display-interface",
  "embedded-graphics-core",
  "embedded-hal",
- "ist7920",
  "paste",
- "sh1106",
- "ssd1306",
- "ssd1309",
 ]
 
 [[package]]
@@ -438,9 +388,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c4eb3267174b8c6c2f654116623910a0fef09c4753f8dd83db29c48a0df988b"
+checksum = "e076559ef8e241f2ae3479e36f97bd5741c0330689e217ad51ce2c76808b868a"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -449,9 +399,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.6.27"
+version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
+checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "riscv"
@@ -544,46 +494,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
-name = "sh1106"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b4022685baa7cc82b2fb97ced2b53fd753a21d98f45b0fd0b55fc717de9075a"
-dependencies = [
- "embedded-graphics-core",
- "embedded-hal",
-]
-
-[[package]]
 name = "spin"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f6002a767bff9e83f8eeecf883ecb8011875a21ae8da43bffb817a57e78cc09"
 dependencies = [
  "lock_api",
-]
-
-[[package]]
-name = "ssd1306"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f066d5458b0a27d938dd2b71a8b397d88c5776cb316b8a39f19ef49b6d290709"
-dependencies = [
- "display-interface",
- "display-interface-i2c",
- "display-interface-spi",
- "embedded-graphics-core",
- "embedded-hal",
-]
-
-[[package]]
-name = "ssd1309"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0517d7e0e5e7e1409899f0719de8902024e0375f0e4678daef63dd69130ba462"
-dependencies = [
- "display-interface",
- "embedded-graphics-core",
- "embedded-hal",
 ]
 
 [[package]]
@@ -607,7 +523,7 @@ dependencies = [
 [[package]]
 name = "stm32g0xx-hal"
 version = "0.1.5"
-source = "git+https://github.com/stm32-rs/stm32g0xx-hal#e272a8f3a49f8a6206afa08afed3b5dac635cc1c"
+source = "git+https://github.com/stm32-rs/stm32g0xx-hal#9582c4a6bd8e726f429186d6e5589dda234b2958"
 dependencies = [
  "bare-metal 1.0.0",
  "cortex-m",
@@ -620,9 +536,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.102"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fcd952facd492f9be3ef0d0b7032a6e442ee9b361d4acc2b1d0c4aaa5f613a1"
+checksum = "a864042229133ada95abf3b54fdc62ef5ccabe9515b64717bcb9a1919e59445d"
 dependencies = [
  "proc-macro2",
  "quote",
