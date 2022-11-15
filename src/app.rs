@@ -1,3 +1,5 @@
+use core::ops::Mul;
+
 use crate::assets::MenuItem;
 use crate::game::Minesweeper;
 use crate::ui::*;
@@ -43,7 +45,7 @@ impl App {
             repeat: false,
         };
 
-        let battery_voltage = battery_voltage.saturating_sub(2200) / 200;
+        let battery_voltage = battery_voltage.mul(3).saturating_sub(2200) / 200;
         let battery_voltage = battery_voltage.clamp(0, 4) as _;
         let game = Minesweeper::new(8);
         Self {
@@ -57,7 +59,7 @@ impl App {
             rx_cmd: cmd,
             sleep_timeout: 0,
             address_edit: false,
-            active_widget: ViewportNode::Scan,
+            active_widget: ViewportNode::MainMenu,
         }
     }
 

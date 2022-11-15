@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![deny(warnings)]
+// #![deny(warnings)]
 
 extern crate panic_halt;
 extern crate rtic;
@@ -9,6 +9,8 @@ mod app;
 mod assets;
 mod game;
 mod ui;
+
+use defmt_rtt as _;
 
 use app::*;
 use curio_bsp::hal::flash::WriteErase;
@@ -48,6 +50,7 @@ mod curio {
 
     #[init]
     fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
+        defmt::info!("init");
         let scb = ctx.core.SCB;
         let flash = Some(ctx.device.FLASH);
         let mut exti = ctx.device.EXTI;
@@ -85,7 +88,6 @@ mod curio {
 
         let options = Options::load();
         display.set_brightness(options.backlight);
-
         let app = App::new(options, control.battery_voltage());
         let ui = Viewport::new();
 
