@@ -1,17 +1,17 @@
-use crate::assets::*;
-use curio_bsp::Display;
 use klaptik::*;
+use crate::Background;
+use super::*;
 
 widget_group! {
     MenuWidget<&Menu>,
     {
-        bg: Background, Point::zero(), Display::SIZE;
-        icon1: MenuIcon, IconSprite, MenuItem::About, Point::new(0, 0);
-        icon2: MenuIcon, IconSprite, MenuItem::About, Point::new(2, 24);
-        icon3: MenuIcon, IconSprite, MenuItem::About, Point::new(0, 48);
-        line1: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 0);
-        line2: MenuIcon, MenuLargeSprite, MenuItem::About, Point::new(24, 16);
-        line3: MenuIcon, MenuMediumSprite, MenuItem::About, Point::new(24, 48);
+        bg: Background;
+        icon1: MenuIcon, Asset::Icon, MenuItem::About, Point::new(0, 0);
+        icon2: MenuIcon, Asset::Icon, MenuItem::About, Point::new(2, 24);
+        icon3: MenuIcon, Asset::Icon, MenuItem::About, Point::new(0, 48);
+        line1: MenuIcon, Asset::MenuSmall, MenuItem::About, Point::new(24, 0);
+        line2: MenuIcon, Asset::MenuLarge, MenuItem::About, Point::new(24, 16);
+        line3: MenuIcon, Asset::MenuSmall, MenuItem::About, Point::new(24, 48);
     },
     |widget: &mut MenuWidget, state: &Menu| {
         let mut lines = state.lines.iter().cycle().skip(state.cursor);

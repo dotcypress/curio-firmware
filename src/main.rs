@@ -6,7 +6,6 @@ extern crate panic_halt;
 extern crate rtic;
 
 mod app;
-mod assets;
 mod game;
 mod ui;
 
@@ -20,7 +19,7 @@ use curio_bsp::hal::rcc::*;
 use curio_bsp::hal::timer::Timer;
 use curio_bsp::stm32::*;
 use curio_bsp::*;
-use klaptik::Widget;
+use klaptik::{SpriteDisplay, Widget};
 use ui::*;
 
 #[rtic::app(device = stm32, peripherals = true, dispatchers = [CEC])]
@@ -32,7 +31,7 @@ mod curio {
     struct Shared {
         app: App,
         control: Control,
-        display: Display,
+        display: SpriteDisplay<DisplayController, { SPRITES.len() }>,
         ir: IrTransceiver,
         exti: EXTI,
         i2c: I2cDev,
@@ -90,6 +89,8 @@ mod curio {
         display.set_brightness(options.backlight);
         let app = App::new(options, control.battery_voltage());
         let ui = Viewport::new();
+
+        let display = SpriteDisplay::new(display, SPRITES);
 
         (
             Shared {
@@ -187,7 +188,7 @@ mod curio {
         match req {
             AppRequest::SetBrightness(val) => {
                 let mut display = ctx.shared.display;
-                display.lock(|display| display.set_brightness(val));
+                display.lock(|display| display.canvas().set_brightness(val));
             }
             AppRequest::TransmitIRCommand(cmd) => {
                 let mut ir = ctx.shared.ir;

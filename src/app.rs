@@ -1,6 +1,5 @@
 use core::ops::Mul;
 
-use crate::assets::MenuItem;
 use crate::game::Minesweeper;
 use crate::ui::*;
 use curio_bsp::hal::flash::FlashPage;

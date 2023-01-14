@@ -27,12 +27,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
-name = "az"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b7e4c2464d97fe331d41de9d5db0def0a96f4d823b8b32a2efd503578988973"
-
-[[package]]
 name = "bare-metal"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -152,7 +146,7 @@ dependencies = [
 [[package]]
 name = "curio-bsp"
 version = "0.0.1"
-source = "git+https://github.com/dotcypress/curio#0cb1930159564c20517e67351c4a5a527a2c6908"
+source = "git+https://github.com/dotcypress/curio#f435c87cad23ddfb6dfdb6b5b193ef10cd954d67"
 dependencies = [
  "infrared",
  "klaptik",
@@ -208,16 +202,6 @@ checksum = "1d2cbbbd58847d508d97629b32cd9730a2d28532f71e219714614406029f18b1"
 dependencies = [
  "critical-section",
  "defmt",
-]
-
-[[package]]
-name = "embedded-graphics-core"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8b1239db5f3eeb7e33e35bd10bd014e7b2537b17e071f726a09351431337cfa"
-dependencies = [
- "az",
- "byteorder",
 ]
 
 [[package]]
@@ -300,10 +284,8 @@ dependencies = [
 [[package]]
 name = "klaptik"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b39561ecb66477c62b2a98b945d8b90155e95a2963c5bb46996eb6ed3f513ec"
+source = "git+https://github.com/dotcypress/klaptik#33cceee0f1e9df6f93f9d31ba10d04bf676e94f7"
 dependencies = [
- "embedded-graphics-core",
  "embedded-hal",
  "paste",
 ]

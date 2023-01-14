@@ -1,11 +1,8 @@
+use crate::{game::board::*, ui::{Background, Asset}};
 use curio_bsp::Button;
 use klaptik::*;
 
-use crate::game::board::*;
-use crate::game::sprites::*;
-
 pub mod board;
-pub mod sprites;
 
 #[derive(Copy, Clone)]
 pub enum GameStatus {
@@ -160,8 +157,8 @@ impl Minesweeper {
 widget_group! {
     GameUI<&Minesweeper>,
     {
-        bg: Background, Point::new(0, 0), Size::new(128, 64);
-        logo: GlyphIcon, LOGO, b'~', Point::new(0, 0);
+        bg: Background;
+        logo: GlyphIcon, Asset::GameLogo, 0, Point::new(0, 0);
         game_screen: GameScreen;
     },
     |game_ui: &mut GameUI, state: &Minesweeper| {
@@ -175,9 +172,9 @@ widget_mux!(
     GameScreen<&Minesweeper>,
     GameScreenNode::Board,
     {
-        board: GameWidget, GAME_TILES, "", Point::new(0, 16);
-        win: GlyphIcon, POPUP, b'W', Point::new(24, 24);
-        game_over: GlyphIcon, POPUP, b'L', Point::new(24, 24);
+        board: GameWidget, Asset::GameBoard, "", Point::new(0, 16), Size::new(8, 8);
+        win: GlyphIcon, Asset::GamePopup, b'W', Point::new(24, 24);
+        game_over: GlyphIcon, Asset::GamePopup, b'L', Point::new(24, 24);
     },
     |mux: &mut GameScreen, state: &Minesweeper| {
         let node = match state.status {
