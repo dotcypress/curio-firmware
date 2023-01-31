@@ -52,10 +52,10 @@ pub enum Asset {
     SubMenu = 5,
     About = 6,
     Website = 7,
-    GameLogo = 100,
-    GamePopup = 101,
-    GameBoard = 102,
-    Background = 255,
+    Background = 8,
+    GameLogo = 9,
+    GamePopup = 10,
+    GameBoard = 11,
 }
 
 impl From<Asset> for SpriteId {
